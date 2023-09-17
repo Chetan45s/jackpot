@@ -1,3 +1,3 @@
-export function getOtp(){
-    return 123456;
+export function getOtp() {
+  return 123456;
 }
