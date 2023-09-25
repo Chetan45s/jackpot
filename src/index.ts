@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { swagger } from '@elysiajs/swagger';
 import { auth } from './auth/route';
 import { MJDatabase } from './handlers/db';
 import { jwtAccessToken } from './auth/helper';
@@ -12,6 +13,7 @@ const port = 3000;
 const app = new Elysia();
 
 app
+  .use(swagger())
   .onError(handleError)
   .use(jwtAccessToken)
   .decorate('dataBase', () => dataBase)

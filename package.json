@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@elysiajs/jwt": "^0.7.0",
+    "@elysiajs/swagger": "^0.7.2",
     "bcryptjs": "^2.4.3",
     "elysia": "latest",
     "jsonwebtoken": "^9.0.2"
