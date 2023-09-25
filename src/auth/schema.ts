@@ -10,14 +10,22 @@ export const loginSchema = {
 export const registerSchema = {
   body: t.Object({
     phone: t.String(),
-    otp: t.Number(),
+    otp: t.String(),
     password: t.String(),
+    name: t.String(),
+    email: t.String(),
+  }),
+};
+
+export const sendOtpSchema = {
+  body: t.Object({
+    phone: t.String(),
   }),
 };
 
 export const verifyOtpSchema = {
   body: t.Object({
     phone: t.String(),
-    otp: t.Number(),
+    otp: t.String(),
   }),
 };

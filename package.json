@@ -10,7 +10,10 @@
     "deploy": "pm2 start bun --name \"bun_in_production\" -- start"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/jwt": "^0.7.0",
+    "bcryptjs": "^2.4.3",
+    "elysia": "latest",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "bun-types": "latest",

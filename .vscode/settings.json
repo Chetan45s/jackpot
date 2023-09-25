@@ -1,4 +1,6 @@
 {
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
+    "bun.debugTerminal.enabled": true,
+    "bun.runtime": "/home/chetan45s/.nvm/versions/node/v18.3.0/bin/bun",
 }
