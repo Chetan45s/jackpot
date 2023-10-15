@@ -4,8 +4,3 @@ export interface Icontroller {
   body: any;
   set: any;
 }
-
-export enum sourceEnum {
-  ONBOARDING = 'ONBOARDING',
-  FORGETPASSWORD = 'FORGETPASSWORD',
-}

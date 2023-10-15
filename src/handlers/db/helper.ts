@@ -13,6 +13,11 @@ export interface IGenericObject {
   [key: string]: any;
 }
 
+interface IdbUpdate {
+  keyValueString: any;
+  keyValueObject: IGenericObject;
+}
+
 function getKeyValueForInsert(body: IGenericObject): IKeyValue {
   let keyString = '';
   let valueString = '';
@@ -36,7 +41,7 @@ export function insertRow(tableName: string, body: object): IdbInsert {
   return { query, keyValue };
 }
 
-function getKeyValue(body: IGenericObject): IGenericObject {
+export function getKeyValue(body: IGenericObject): IGenericObject {
   let keyValueString: string = '';
   const keyValueObject: IGenericObject = {};
   const keys = Object.keys(body);
@@ -53,8 +58,17 @@ export function updateTable(tableName: string, body: object, conditionBody: obje
   const bodyValue = getKeyValue(body);
   const conditionBodyValue = getKeyValue(conditionBody);
 
-  const keyValue: string[] = [...bodyValue.keyValueObject, ...conditionBodyValue.keyValueObject];
+  const keyValue = { ...(<[]>bodyValue.keyValueObject), ...(<[]>conditionBodyValue.keyValueObject) };
   const query = `UPDATE ${tableName} SET ${bodyValue.keyValueString} WHERE ${conditionBodyValue.keyValueString}`;
+
+  return { query, keyValue };
+}
+
+export function deleteTable(tableName: string, conditionBody: object): IdbInsert {
+  const conditionBodyValue = getKeyValue(conditionBody);
+  const keyValue = conditionBodyValue.keyValueObject;
+
+  const query = `DELETE FROM ${tableName} WHERE ${conditionBodyValue.keyValueString}`;
 
   return { query, keyValue };
 }

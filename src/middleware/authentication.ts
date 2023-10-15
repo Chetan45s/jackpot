@@ -1,54 +1,32 @@
 import { IGenericObject } from '../handlers/db/helper';
 
-export async function isAuthenticated(args: IGenericObject) {
-  const {
-    jwtAccess,
-    db,
-    request: { headers },
-    set,
-    dataBase,
-  } = args;
-  const authorization = headers.get('authorization');
+export async function isAuthenticated(args: any) {
+  const { dataBase, jwtAccess, request, set }: IGenericObject = args;
+  const authorization = request.headers.get('authorization');
   if (!authorization) {
     set.status = 401;
-    return {
-      success: false,
-      message: 'Unauthorized',
-      data: null,
-    };
+    throw new Error('Unauthorized');
   }
   const token = authorization.split(' ')[1];
   if (!token) {
     set.status = 401;
-    return {
-      success: false,
-      message: 'Unauthorized',
-      data: null,
-    };
+    throw new Error('Unauthorized');
   }
   const payload = await jwtAccess.verify(token);
   if (!payload) {
     set.status = 401;
-    return {
-      success: false,
-      message: 'Unauthorized',
-      data: null,
-    };
+    throw new Error('Unauthorized');
   }
-  const { id } = payload;
-  const query = `SELECT id FROM userdb WHERE id=${id}`;
-  const user = await db.executeQuery(query);
+  const { id = null } = payload;
+  // const query = `SELECT id FROM userdb WHERE id=${id}`;
+  // const user = await dataBase().executeQuery(query);
 
-  if (!user) {
+  if (!id) {
     set.status = 401;
-    return {
-      success: false,
-      message: 'Unauthorized',
-      data: null,
-    };
+    throw new Error('Unauthorized');
   }
 
   return {
-    user,
+    id,
   };
 }

@@ -4,8 +4,9 @@ interface IHandleError {
   set: any;
 }
 
-export function handleError({ code, error, set }: IHandleError) {
-  set.status = error.status;
+export function handleError(err: any) {
+  console.log(err);
+  const { code, error }: IHandleError = err;
   switch (code) {
     case 'VALIDATION':
       // Find a specific error name (path is OpenAPI Schema compliance)

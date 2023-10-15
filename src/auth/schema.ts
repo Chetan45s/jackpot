@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { sourceEnum } from './interface';
 
 export const loginSchema = {
   body: t.Object({
@@ -13,13 +14,23 @@ export const registerSchema = {
     otp: t.String(),
     password: t.String(),
     name: t.String(),
-    email: t.String(),
+    source: t.String(),
+  }),
+};
+
+export const changePassswordSchema = {
+  body: t.Object({
+    phone: t.String(),
+    otp: t.String(),
+    password: t.String(),
+    source: t.String(),
   }),
 };
 
 export const sendOtpSchema = {
   body: t.Object({
     phone: t.String(),
+    source: t.Enum(sourceEnum),
   }),
 };
 
@@ -27,5 +38,6 @@ export const verifyOtpSchema = {
   body: t.Object({
     phone: t.String(),
     otp: t.String(),
+    source: t.String(),
   }),
 };

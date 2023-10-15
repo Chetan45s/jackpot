@@ -5,6 +5,7 @@ import { MJDatabase } from './handlers/db';
 import { jwtAccessToken } from './auth/helper';
 import { isAuthenticated } from './middleware/authentication';
 import { handleError } from './handlers/error';
+import { userProfile } from './userProfile/route';
 
 const dataBase = new MJDatabase();
 
@@ -19,6 +20,7 @@ app
   .decorate('dataBase', () => dataBase)
   .decorate('authCheck', isAuthenticated)
   .use(auth)
+  .use(userProfile)
   .listen(port);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

@@ -1,6 +1,8 @@
 import { tableName } from '../handlers/db';
 import { IGenericObject } from '../handlers/db/helper';
+import { getUserByPhone } from '../userProfile/helpers';
 import { getOtp, getTime } from './helper';
+import { sourceEnum } from './interface';
 const bcrypt = require('bcryptjs');
 
 export async function login(args: IGenericObject) {
@@ -32,14 +34,24 @@ export async function login(args: IGenericObject) {
 
 export async function sendOtp(args: IGenericObject) {
   const { body, set, dataBase } = args;
-  const { phone } = body;
+  const { phone, source } = body;
   try {
+    if (source === 'forgotPassword') {
+      const data = getUserByPhone(phone, dataBase);
+      if (!data) {
+        set.status = 400;
+        return {
+          message: 'Wrong Otp',
+        };
+      }
+    }
     // create otp
     const otp = getOtp();
     // Add otp in DB
     const rowBody = {
       otp,
       phone,
+      source,
     };
     await dataBase().addRow(tableName.CODE, rowBody);
     set.status = 201;
@@ -55,12 +67,21 @@ export async function sendOtp(args: IGenericObject) {
 export async function verifyOtp(args: IGenericObject) {
   const { body, set, dataBase } = args;
   // get otp from body
-  const { otp: userOtp, phone } = body;
+  const { otp: userOtp, phone, source } = body;
   try {
+    if (source === sourceEnum.FORGETPASSWORD) {
+      const data = getUserByPhone(phone, dataBase);
+      if (!data) {
+        set.status = 400;
+        return {
+          message: 'Wrong Otp',
+        };
+      }
+    }
     // get otp from db
-    const query = `SELECT otp,createdAt FROM ${tableName.CODE} WHERE phone=${phone}`;
-    const value = await dataBase().executeQuery(query);
-    const { otp, createdAt } = value[0];
+    const query = `SELECT id, otp, createdAt FROM ${tableName.CODE}`;
+    const value = await dataBase().executeSelectQuery(query, { phone, source });
+    const { id, otp, createdAt } = value[0];
 
     // Add otp in DB
     if (otp !== userOtp) {
@@ -73,6 +94,7 @@ export async function verifyOtp(args: IGenericObject) {
     const timeDifference = getTime().ms() - getTime().toMs(createdAt);
 
     if (timeDifference > 1000 * 60 * 60 * 10) {
+      await dataBase().deleteRow(tableName.CODE, { id });
       set.status = 400;
       return {
         message: 'Otp Expired',
@@ -90,13 +112,13 @@ export async function verifyOtp(args: IGenericObject) {
 
 export async function register(args: IGenericObject) {
   const { body, set, dataBase } = args;
-  const { name, email, phone, otp: userOtp, password } = body;
+  const { name, phone, otp: userOtp, password, source } = body;
 
   try {
     // get otp from db
-    const query = `SELECT otp,createdAt FROM ${tableName.CODE} WHERE phone=${phone}`;
-    const value = await dataBase().executeQuery(query);
-    const { otp, createdAt } = value[0];
+    const query = `SELECT id, otp, createdAt FROM ${tableName.CODE}`;
+    const value = await dataBase().executeSelectQuery(query, { phone, source });
+    const { id: codeId, otp, createdAt } = value[0];
 
     // Add otp in DB
     if (otp !== userOtp) {
@@ -120,11 +142,68 @@ export async function register(args: IGenericObject) {
     const rowBody = {
       id: getTime().ms(),
       name,
-      email,
       phone,
       password: encrptedPassword,
     };
     await dataBase().addRow(tableName.USER, rowBody);
+    await dataBase().deleteRow(tableName.CODE, { id: codeId });
+    set.status = 201;
+    return {
+      message: 'Success',
+    };
+  } catch (err: any) {
+    return new Error(err);
+  }
+}
+
+export async function changePassword(args: IGenericObject) {
+  const { body, set, dataBase } = args;
+  const { phone, otp: userOtp, password, source } = body;
+
+  try {
+    let userId = null;
+    if (source === sourceEnum.FORGETPASSWORD) {
+      const data = await getUserByPhone(phone, dataBase);
+      if (!data) {
+        set.status = 400;
+        return {
+          message: 'Wrong Otp',
+        };
+      }
+      ({ id: userId } = data);
+    }
+    // get otp from db
+    const query = `SELECT id, otp, createdAt FROM ${tableName.CODE} WHERE phone=${phone}`;
+    const value = await dataBase().executeQuery(query);
+    const { id: codeId, otp, createdAt } = value[0];
+
+    // Add otp in DB
+    if (otp !== userOtp) {
+      set.status = 400;
+      return {
+        message: 'Wrong Otp',
+      };
+    }
+
+    const timeDifference = getTime().ms() - getTime().toMs(createdAt);
+
+    if (timeDifference > 1000 * 60 * 60 * 10) {
+      set.status = 400;
+      return {
+        message: 'Otp Expired',
+      };
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const encrptedPassword = await bcrypt.hash(password, salt);
+    const rowBody = {
+      password: encrptedPassword,
+    };
+    const conditionalBody = {
+      id: userId,
+    };
+    await dataBase().updateRow(tableName.USER, rowBody, conditionalBody);
+    await dataBase().deleteRow(tableName.CODE, { id: codeId });
 
     set.status = 201;
     return {

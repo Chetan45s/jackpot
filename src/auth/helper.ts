@@ -6,9 +6,10 @@ export const jwtAccessToken = new Elysia({ name: 'jwtAccess' }).use(
     name: 'jwtAccess',
     secret: process.env.JWT_SECRET!,
     schema: t.Object({
-      id: t.String(),
+      id: t.Number(),
+      exp: t.Number(),
     }),
-    exp: '5m',
+    exp: '7d',
   }),
 );
 
